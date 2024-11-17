@@ -1,0 +1,54 @@
+packages:
+com.example.myapplication3
+resources:
+Texture texture: transparent.png
+Texture texture1: fp/base.png
+Font font: Font.ttf
+Audio music: Music.mp3
+Polygon polygon: example.polygon
+Texture pipe: fp/pipe-green.png
+Texture player: bird.png
+Texture bg: fp/background-day.png
+
+rootObject:
+    GameManager
+    camera:
+        transform:
+            scale: 4f, 8f
+        CameraTargetComponent
+    background:
+        transform:
+            scale: 18f, 8f
+        SpriteRendererComponent: bg, Vector2(4f 1f)
+        RepeatComponent: 4.5f
+    ground:
+        transform:
+            scale: 24f, 2f
+            position: 0f, -3.5f
+        SpriteRendererComponent: texture1, Vector2(4f 1f)
+        RigidbodyComponent: BodyType.STATIC
+        BoxColliderComponent: 10f, 1f, 1f, 0.5f, 0f
+        RepeatComponent: 6f
+    upground:
+        transform:
+            scale: 24f, 2f
+            position: 0f, 3.5f
+        SpriteRendererComponent: texture1, Vector2(4f -1f)
+        RigidbodyComponent: BodyType.STATIC
+        BoxColliderComponent: 10f, 1f, 1f, 0.5f, 0f
+        RepeatComponent: 6f
+    player:
+        transform:
+            scale: 0.75f, 0.5f
+        //CircleComponent: Color.Red, 0.25f, 36
+        SpriteRendererComponent: player, Vector2(1f 1f)
+        RigidbodyComponent: BodyType.DYNAMIC
+        CircleColliderComponent: 0.3f, 1f, 0.5f, 0f
+        PlayerComponent
+    text:
+        transform:
+            scale: 3.5f, 0.6f
+            position: 1f, 2f
+        TextComponent: 'Tap to Play!', font, 100f, Color.Black
+    //Debugdraw:
+        //PhysDebugDrawComponent
