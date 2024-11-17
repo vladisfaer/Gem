@@ -7,7 +7,8 @@ data class Vector3(var x: Float = 0f, var y: Float = 0f, var z: Float = 0f) {
     // Операции с векторами
     operator fun plus(other: Vector3) = Vector3(x + other.x, y + other.y, z + other.z)
     operator fun minus(other: Vector3) = Vector3(x - other.x, y - other.y, z - other.z)
-    operator fun times(scalar: Float) = Vector3(x * scalar, y * scalar, z * scalar)
+    operator fun times(other: Vector3) = Vector3(x * other.x, y * other.y, z * other.z)
+    fun scalarMultiply(scalar: Float) = Vector3(x * scalar, y * scalar, z * scalar)
     operator fun div(scalar: Float) = Vector3(x / scalar, y / scalar, z / scalar)
 
     // Скалярное произведение двух векторов

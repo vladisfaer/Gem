@@ -25,7 +25,7 @@ class Matrix4(
     }
 
     // Умножение на скаляр
-    operator fun times(scalar: Float): Matrix4 {
+    fun scalarMultiply(scalar: Float): Matrix4 {
         return Matrix4(values.map { it * scalar }.toFloatArray())
     }
 
@@ -111,7 +111,10 @@ class Matrix4(
     }
 
     // Матрица сдвига
-    fun translate(dx: Float, dy: Float, dz: Float): Matrix4 {
+    fun translate(delta: Vector3): Matrix4 {
+        val dx = delta.x
+        val dy = delta.y
+        val dz = delta.z
         val translationMatrix = Matrix4(floatArrayOf(
             1f, 0f, 0f, dx,
             0f, 1f, 0f, dy,
@@ -122,7 +125,10 @@ class Matrix4(
     }
 
     // Матрица масштабирования
-    fun scale(sx: Float, sy: Float, sz: Float): Matrix4 {
+    fun scale(scale: Vector3): Matrix4 {
+        val sx = scale.x
+        val sy = scale.y
+        val sz = scale.z
         val scalingMatrix = Matrix4(floatArrayOf(
             sx, 0f, 0f, 0f,
             0f, sy, 0f, 0f,

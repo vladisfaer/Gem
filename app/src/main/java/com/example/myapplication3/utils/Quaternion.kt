@@ -38,7 +38,7 @@ data class Quaternion(
         val mag = magnitude()
         if (mag > 0f) {
             val invMagSq = 1f / (mag * mag)
-            return conjugate() * invMagSq
+            return conjugate().scalarMultiply(invMagSq)
         }
         throw IllegalStateException("Cannot invert a quaternion with zero magnitude")
     }
@@ -54,7 +54,7 @@ data class Quaternion(
     }
 
     // Умножение кватерниона на скаляр
-    operator fun times(scalar: Float): Quaternion {
+    fun scalarMultiply(scalar: Float): Quaternion {
         return Quaternion(x * scalar, y * scalar, z * scalar, w * scalar)
     }
 
