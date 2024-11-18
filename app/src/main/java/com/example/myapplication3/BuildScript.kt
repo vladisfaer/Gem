@@ -5,7 +5,11 @@ import com.gem.framework.components.*
 
 object BuildScript {
     fun build(){
-        rootObject.addChild(GameObject("cubes").apply{
+        rootObject.apply{
+        addChild(GameObject().apply{
+            addComponent(SquareTest())
+        })
+        addChild(GameObject("cubes").apply{
             transform.position = Vector3(0f,0f,0.0f)
             addComponent(Mover())
             addChild(GameObject("cube").apply{
@@ -29,5 +33,6 @@ object BuildScript {
                 addComponent(CubeRendererTest())
             })
         })
+        }
     }
 }

@@ -14,9 +14,8 @@ class SquareTest : Component() {
 
     private val vertexShaderCode = """
         attribute vec4 vPosition;
-        uniform mat4 uMVPMatrix;
         void main() {
-            gl_Position = uMVPMatrix * vPosition;
+            gl_Position = vPosition;
         }
     """
 
@@ -78,14 +77,14 @@ class SquareTest : Component() {
 
     private fun draw() {
         // Матрица модели, полученная из Transform
-        val modelMatrix = transformToMatrix(gameObject.transform)
+        //val modelMatrix = transformToMatrix(gameObject.transform)
 
         // Активируем программу OpenGL
         GLES20.glUseProgram(program)
 
         // Загружаем матрицу
-        val mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
-        GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelMatrix.values, 0)
+        //val mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
+        //GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelMatrix.values, 0)
 
         // Устанавливаем координаты вершин
         val positionHandle = GLES20.glGetAttribLocation(program, "vPosition")

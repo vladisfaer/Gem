@@ -13,9 +13,12 @@ class GLRenderer : GLSurfaceView.Renderer {
     private val startTime = System.nanoTime()
     
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
+        println("New surface")
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         GLES20.glClearColor(1f, 1f, 1f, 1f)
         
         BuildScript.build()
+        rootObject.postInit()
         
         initialized = true
     }

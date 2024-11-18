@@ -6,9 +6,10 @@ import com.gem.framework.components.*
 
 class GameObject(val name: String = "GameObject") {
     val transform = Transform(this)
+    var initialized = false
     public val components = mutableListOf<Component>()
     private val children = mutableListOf<GameObject>()
-    private var updateOrder: List<WeakReference<() -> Unit>> = emptyList()
+    private var updateOrder: List<() -> Unit> = emptyList()
     private var changedUpdateOrder = true
 
     var parent: GameObject? = null
@@ -39,9 +40,9 @@ class GameObject(val name: String = "GameObject") {
     }
 
     fun addChild(child: GameObject) {
+        if (child.initialized) { return }
         child.parent = this
         children.add(child)
-        child.postInit()
         notifyParentOfChange()
     }
 
@@ -63,22 +64,23 @@ class GameObject(val name: String = "GameObject") {
         parent?.notifyParentOfChange()
     }
 
-    fun rebuildUpdateOrder(): List<WeakReference<() -> Unit>> {
+    fun rebuildUpdateOrder(): List<() -> Unit> {
         if (!changedUpdateOrder) return updateOrder // Если изменений нет, возвращаем старый порядок
         changedUpdateOrder = false
 
         val childUpdates = children.flatMap { it.rebuildUpdateOrder() }
-        val componentUpdates = components.map { WeakReference({it.tryUpdate()}) }
+        val componentUpdates = components.map {{ it.tryUpdate() }}
         updateOrder = componentUpdates + childUpdates
         return updateOrder
     }
 
     fun tryUpdateAll() {
         if (changedUpdateOrder) rebuildUpdateOrder()
-        updateOrder.forEach { it.get()?.invoke() }
+        updateOrder.forEach { it.invoke() }
     }
 
     fun postInit() {
+        initialized = true
         components.forEach { it.postInit() }
         children.forEach { it.postInit() }
     }
