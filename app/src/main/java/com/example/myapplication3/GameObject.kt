@@ -43,6 +43,7 @@ class GameObject(val name: String = "GameObject") {
         if (child.initialized) { return }
         child.parent = this
         children.add(child)
+        if (initialized) { child.postInit() }
         notifyParentOfChange()
     }
 
@@ -107,7 +108,6 @@ class GameObject(val name: String = "GameObject") {
         copy.parent = parent
         copy.components.addAll(components.map { it.copy() })
         copy.children.addAll(children.map { it.copyForInstantiate() })
-        copy.postInit()
         return copy
     }
 }
