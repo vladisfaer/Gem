@@ -9,13 +9,13 @@ import java.nio.FloatBuffer
 
 class SquareTest : Component() {
 
-    private val vertexBuffer: FloatBuffer
-    private val colorBuffer: FloatBuffer
+    private var vertexBuffer: FloatBuffer
 
     private val vertexShaderCode = """
+        uniform mat4 uMVPMatrix;
         attribute vec4 vPosition;
         void main() {
-            gl_Position = vPosition;
+            gl_Position = vPosition * uMVPMatrix;
         }
     """
 
@@ -38,26 +38,12 @@ class SquareTest : Component() {
             -0.5f, 0.5f, 0.0f    // Верхний левый угол
         )
 
-        // Цвета вершин
-        val colors = floatArrayOf(
-            1.0f, 0.0f, 0.0f, 1.0f, // Красный
-            0.0f, 1.0f, 0.0f, 1.0f, // Зеленый
-            0.0f, 0.0f, 1.0f, 1.0f, // Синий
-            1.0f, 1.0f, 0.0f, 1.0f  // Желтый
-        )
-
         // Инициализация буферов
         vertexBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer()
         vertexBuffer.put(vertices)
         vertexBuffer.position(0)
-
-        colorBuffer = ByteBuffer.allocateDirect(colors.size * 4)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer()
-        colorBuffer.put(colors)
-        colorBuffer.position(0)
 
         // Компиляция шейдеров
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
@@ -76,15 +62,13 @@ class SquareTest : Component() {
     }
 
     private fun draw() {
-        // Матрица модели, полученная из Transform
-        //val modelMatrix = transformToMatrix(gameObject.transform)
-
-        // Активируем программу OpenGL
+        val modelMatrix = gameObject.transform.globalMatrix()
+        
         GLES20.glUseProgram(program)
 
         // Загружаем матрицу
-        //val mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
-        //GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelMatrix.values, 0)
+        val mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
+        GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, modelMatrix.values, 0)
 
         // Устанавливаем координаты вершин
         val positionHandle = GLES20.glGetAttribLocation(program, "vPosition")
