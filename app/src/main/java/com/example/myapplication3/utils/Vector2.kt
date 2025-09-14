@@ -8,6 +8,7 @@ data class Vector2(var x: Float = 0f, var y: Float = 0f) {
     operator fun plus(other: Vector2) = Vector2(x + other.x, y + other.y)
     operator fun minus(other: Vector2) = Vector2(x - other.x, y - other.y)
     operator fun times(scalar: Float) = Vector2(x * scalar, y * scalar)
+    operator fun times(scalar: Vector2) = Vector2(x * scalar.x, y * scalar.y)
     operator fun div(scalar: Float) = Vector2(x / scalar, y / scalar)
 
     // Скалярное произведение двух векторов
@@ -39,6 +40,10 @@ data class Vector2(var x: Float = 0f, var y: Float = 0f) {
             x * cosA - y * sinA,
             x * sinA + y * cosA
         )
+    }
+
+    override fun toString(): String {
+        return "Vector2($x;$y)"
     }
 
     companion object {

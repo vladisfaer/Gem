@@ -3,30 +3,23 @@ package com.gem.framework.components
 import com.gem.framework.GameObject
 import java.lang.ref.WeakReference
 
-abstract class Component {
-    lateinit var gameObject: GameObject
+abstract class Component(override var name: String = "Component") : Updatable() {
+    val gameObject: GameObject
+        get() = parent as GameObject
 
-    fun tryUpdate() {
-        if (updateCheck()) {
-            update()
-        }
+    override fun update() {}
+
+    override fun updateCheck(): Boolean {
+        return true
     }
 
-    open fun update() {
-        // Основной код обновления
+    override fun onPostInit() {}
+
+    override fun onRemove() {}
+
+    override fun getUpdateOrder(): List<() -> Unit> {
+        return listOf {tryUpdate()}
     }
 
-    open fun updateCheck(): Boolean {
-        return true // По умолчанию обновление разрешено
-    }
-
-    open fun postInit() {
-        // Вызывается после добавления в дерево
-    }
-
-    open fun onRemove() {
-        // Очищает ресурсы компонента при удалении
-    }
-    
-    abstract fun copy() : Component
+    abstract override fun copy() : Component
 }

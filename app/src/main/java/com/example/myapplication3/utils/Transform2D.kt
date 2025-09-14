@@ -3,37 +3,37 @@ package com.gem.framework.utils
 import com.gem.framework.*
 import java.lang.ref.WeakReference
 
-class Transform(val gameObject: GameObject) {
-    private var localPosition = Vector3.Zero
-    private var localRotation = Vector3.Zero
-    private var localScale = Vector3.One
+class Transform2D(val gameObject: GameObject) {
+    private var localPosition = Vector2.Zero
+    private var localRotation = 0f
+    private var localScale = Vector2.One
 
-    private var parent: WeakReference<Transform>? = null
+    private var parent: WeakReference<Transform2D>? = null
     private var hasParent: Boolean = false
 
     init {
         updateParentReference()
     }
 
-    var position: Vector3
+    var position: Vector2
         get() = localPosition
         set(value) { localPosition = value }
 
-    var rotation: Vector3
+    var rotation: Float
         get() = localRotation
         set(value) { localRotation = value }
 
-    var scale: Vector3
+    var scale: Vector2
         get() = localScale
         set(value) { localScale = value }
 
-    val globalPosition: Vector3
+    val globalPosition: Vector2
         get() = if (hasParent) parent?.get()?.globalMatrix()?.transform(localPosition) ?: localPosition else localPosition
 
-    val globalRotation: Vector3
+    val globalRotation: Float
         get() = if (hasParent) parent?.get()?.globalRotation?.plus(localRotation) ?: localRotation else localRotation
 
-    val globalScale: Vector3
+    val globalScale: Vector2
         get() = if (hasParent) parent?.get()?.globalScale?.times(localScale) ?: localScale else localScale
 
     fun updateParentReference() {
@@ -42,10 +42,10 @@ class Transform(val gameObject: GameObject) {
         parent = if (hasParent) WeakReference(parentObject?.transform) else null
     }
 
-    fun globalMatrix(): Matrix4 {
-        val translation = Matrix4().translate(localPosition)
-        val rotation = Matrix4().rotateEuler(localRotation)
-        val scaling = Matrix4().scale(localScale)
+    fun globalMatrix(): Matrix3 {
+        val translation = Matrix3().translate(localPosition)
+        val rotation = Matrix3().rotate(localRotation)
+        val scaling = Matrix3().scale(localScale)
         val localMatrix = translation * rotation * scaling
         return if (hasParent) parent?.get()?.globalMatrix()?.times(localMatrix) ?: localMatrix else localMatrix
     }

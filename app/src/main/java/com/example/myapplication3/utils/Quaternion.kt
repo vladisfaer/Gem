@@ -9,7 +9,6 @@ data class Quaternion(
     var w: Float = 1f
 ) {
 
-    // Нормализация кватерниона
     fun normalize() {
         val mag = magnitude()
         if (mag > 0f) {
@@ -27,23 +26,19 @@ data class Quaternion(
         return q
     }
 
-    // Длина кватерниона
     fun magnitude(): Float = sqrt(x * x + y * y + z * z + w * w)
 
-    // Конъюгат кватерниона
     fun conjugate(): Quaternion = Quaternion(-x, -y, -z, w)
 
-    // Инверсия кватерниона
     fun inverse(): Quaternion {
         val mag = magnitude()
         if (mag > 0f) {
             val invMagSq = 1f / (mag * mag)
-            return conjugate().scalarMultiply(invMagSq)
+            return conjugate() * invMagSq
         }
         throw IllegalStateException("Cannot invert a quaternion with zero magnitude")
     }
 
-    // Умножение кватернионов
     operator fun times(other: Quaternion): Quaternion {
         return Quaternion(
             w * other.x + x * other.w + y * other.z - z * other.y,
@@ -53,12 +48,10 @@ data class Quaternion(
         )
     }
 
-    // Умножение кватерниона на скаляр
-    fun scalarMultiply(scalar: Float): Quaternion {
+    operator fun times(scalar: Float): Quaternion {
         return Quaternion(x * scalar, y * scalar, z * scalar, w * scalar)
     }
 
-    // Преобразование в матрицу 4x4
     fun toMatrix(): Matrix4 {
         val xx = x * x
         val yy = y * y
@@ -78,7 +71,6 @@ data class Quaternion(
         ))
     }
 
-    // Преобразование в углы Эйлера
     fun toEulerAngles(): Vector3 {
         val sinRCosP = 2f * (w * x + y * z)
         val cosRCosP = 1f - 2f * (x * x + y * y)
@@ -98,7 +90,6 @@ data class Quaternion(
         return Vector3(roll, pitch, yaw)
     }
 
-    // Преобразование из углов Эйлера
     companion object {
         fun fromEulerAngles(eulerAngles: Vector3): Quaternion {
             val (roll, pitch, yaw) = eulerAngles
@@ -118,7 +109,6 @@ data class Quaternion(
             ).normalized()
         }
 
-        // Преобразование из угла и вектора
         fun fromAxisAngle(axis: Vector3, angle: Float): Quaternion {
             val halfAngle = angle / 2f
             val sinHalfAngle = sin(halfAngle)

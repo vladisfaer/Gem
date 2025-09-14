@@ -18,7 +18,7 @@ class SurfaceView(private val context: Context) : GLSurfaceView(context) {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (eventBus == null) {
-            eventBus = rootObject.getComponent<EventBus>()
+            eventBus = rootObject.get<EventBus>()
         }
         if (eventBus != null) {
             when (event.action) {

@@ -10,7 +10,6 @@ class Matrix4(
         0f, 0f, 0f, 1f
     )
 ) {
-    // Умножение матриц
     operator fun times(other: Matrix4): Matrix4 {
         val result = FloatArray(16)
         for (row in 0..3) {
@@ -24,27 +23,22 @@ class Matrix4(
         return Matrix4(result)
     }
 
-    // Умножение на скаляр
-    fun scalarMultiply(scalar: Float): Matrix4 {
+    operator fun times(scalar: Float): Matrix4 {
         return Matrix4(values.map { it * scalar }.toFloatArray())
     }
 
-    // Деление на скаляр
     operator fun div(scalar: Float): Matrix4 {
         return Matrix4(values.map { it / scalar }.toFloatArray())
     }
 
-    // Сложение матриц
     operator fun plus(other: Matrix4): Matrix4 {
         return Matrix4(values.zip(other.values) { a, b -> a + b }.toFloatArray())
     }
 
-    // Вычитание матриц
     operator fun minus(other: Matrix4): Matrix4 {
         return Matrix4(values.zip(other.values) { a, b -> a - b }.toFloatArray())
     }
 
-    // Трансформация 3D-вектора
     fun transform(v: Vector3): Vector3 {
         val x = v.x * values[0] + v.y * values[1] + v.z * values[2] + values[3]
         val y = v.x * values[4] + v.y * values[5] + v.z * values[6] + values[7]
@@ -52,13 +46,11 @@ class Matrix4(
         return Vector3(x, y, z)
     }
 
-    // Обратная матрица
     fun invert(): Matrix4 {
         val inv = FloatArray(16) { 0f }
         val m = values
         val temp = FloatArray(16) { 0f }
-        
-        // Расширяем матрицу: [M | I]
+
         for (i in 0..3) {
             for (j in 0..3) {
                 temp[i * 4 + j] = m[i * 4 + j]
@@ -66,7 +58,6 @@ class Matrix4(
             }
         }
 
-        // Приведение к единичной матрице
         for (i in 0..3) {
             var pivot = temp[i * 4 + i]
             if (pivot == 0f) throw IllegalArgumentException("Матрица необратима")
@@ -92,15 +83,13 @@ class Matrix4(
         return Matrix4(inv)
     }
 
-    // Определитель матрицы
     fun determinant(): Float {
         return values[0] * (values[5] * (values[10] * values[15] - values[11] * values[14]) -
                             values[9] * (values[6] * values[15] - values[7] * values[14]) +
                             values[13] * (values[6] * values[11] - values[7] * values[10]))
-        // Расчет других элементов определителя аналогично...
+        TODO("Дописать определитель")
     }
 
-    // Транспонирование
     fun transpose(): Matrix4 {
         return Matrix4(floatArrayOf(
             values[0], values[4], values[8], values[12],
@@ -111,10 +100,7 @@ class Matrix4(
     }
 
     // Матрица сдвига
-    fun translate(delta: Vector3): Matrix4 {
-        val dx = delta.x
-        val dy = delta.y
-        val dz = delta.z
+    fun translate(dx: Float, dy: Float, dz: Float): Matrix4 {
         val translationMatrix = Matrix4(floatArrayOf(
             1f, 0f, 0f, dx,
             0f, 1f, 0f, dy,
@@ -125,10 +111,7 @@ class Matrix4(
     }
 
     // Матрица масштабирования
-    fun scale(scale: Vector3): Matrix4 {
-        val sx = scale.x
-        val sy = scale.y
-        val sz = scale.z
+    fun scale(sx: Float, sy: Float, sz: Float): Matrix4 {
         val scalingMatrix = Matrix4(floatArrayOf(
             sx, 0f, 0f, 0f,
             0f, sy, 0f, 0f,

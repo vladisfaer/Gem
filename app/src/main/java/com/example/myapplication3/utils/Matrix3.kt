@@ -93,8 +93,29 @@ class Matrix3(
         return this * translationMatrix
     }
 
-    // Создание матрицы масштабирования
+    fun translate(dvec :Vector2): Matrix3 {
+        val dx = dvec.x
+        val dy = dvec.y
+        val translationMatrix = Matrix3(floatArrayOf(
+            1f, 0f, dx,
+            0f, 1f, dy,
+            0f, 0f, 1f
+        ))
+        return this * translationMatrix
+    }
+
     fun scale(sx: Float, sy: Float): Matrix3 {
+        val scalingMatrix = Matrix3(floatArrayOf(
+            sx, 0f, 0f,
+            0f, sy, 0f,
+            0f, 0f, 1f
+        ))
+        return this * scalingMatrix
+    }
+
+    fun scale(svec: Vector2): Matrix3 {
+        val sx = svec.x
+        val sy = svec.y
         val scalingMatrix = Matrix3(floatArrayOf(
             sx, 0f, 0f,
             0f, sy, 0f,
