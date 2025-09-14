@@ -1,13 +1,14 @@
 package com.gem.framework
 
+import android.app.Activity
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.view.MotionEvent
 import com.gem.framework.rootObject
 import com.gem.framework.components.EventBus
 
-lateinit var globContext: Context
-class SurfaceView(private val context: Context) : GLSurfaceView(context) {
+lateinit var globContext: Activity
+class SurfaceView(private val context: Activity) : GLSurfaceView(context) {
     var eventBus: EventBus? = null
 
     init {

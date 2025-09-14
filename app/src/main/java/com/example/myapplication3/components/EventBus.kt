@@ -1,4 +1,4 @@
-package com.gem.framework.components;
+package com.gem.framework.components
 
 class EventBus(
     private val listeners: MutableMap<String, MutableList<(Any?) -> Unit>> = mutableMapOf<String, MutableList<(Any?) -> Unit>>(),

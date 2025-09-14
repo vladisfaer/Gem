@@ -15,6 +15,10 @@ object BuildScript {
                 transform.position = Vector2(0.2f,0.4f)
                 add(RectangleComponent(col = Color(0f,0f,1f,0f)))
             })
+            add(GameObject("CameraObject").apply{
+                transform.scale = Vector2(5f,10f)
+                add(CameraTargetComponent())
+            })
         }
     }
 }

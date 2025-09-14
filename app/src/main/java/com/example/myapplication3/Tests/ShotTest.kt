@@ -28,8 +28,9 @@ public class ShotTest : Component() {
     fun shoot(event: MotionEvent) {
         val x = event.getAxisValue(MotionEvent.AXIS_X) / 1080f - 0.5f
         val y = -event.getAxisValue(MotionEvent.AXIS_Y) / 2160f + 0.5f
+        val cords = Vector2(event.getAxisValue(MotionEvent.AXIS_X),event.getAxisValue(MotionEvent.AXIS_Y))
         rootObject.instantiate(bullet).apply{
-            transform.position = Vector2(2f*x,2f*y)
+            transform.position = Camera.toWorldPosition(cords)
         }
     }
     

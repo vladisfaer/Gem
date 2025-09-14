@@ -1,6 +1,7 @@
 package com.example.myapplication3.components
 
 import android.opengl.GLES20
+import com.gem.framework.Camera
 import com.gem.framework.components.Component
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -51,24 +52,21 @@ class RectangleComponent(override var name: String = "graphics", col: Color = Co
     fun draw() {
         val transform = gameObject.transform
 
-        // Положение, масштаб и поворот рассчитываются на основе глобальной матрицы
         val halfWidth = 0.5f
         val halfHeight = 0.5f
 
-        // Позиции вершин в локальных координатах до трансформации
         val topRight = Vector2(halfWidth, halfHeight)
         val bottomRight = Vector2(halfWidth, -halfHeight)
         val bottomLeft = Vector2(-halfWidth, -halfHeight)
         val topLeft = Vector2(-halfWidth, halfHeight)
 
         val globMat = transform.globalMatrix()
-        // Преобразуем вершины через глобальную матрицу
-        val screenTopRight = globMat.transform(topRight)
-        val screenBottomRight = globMat.transform(bottomRight)
-        val screenBottomLeft = globMat.transform(bottomLeft)
-        val screenTopLeft = globMat.transform(topLeft)
 
-        // Заполняем массив вершин с учетом глобальных координат
+        val screenTopRight = Camera.toScreenPosition(globMat.transform(topRight))
+        val screenBottomRight = Camera.toScreenPosition(globMat.transform(bottomRight))
+        val screenBottomLeft = Camera.toScreenPosition(globMat.transform(bottomLeft))
+        val screenTopLeft = Camera.toScreenPosition(globMat.transform(topLeft))
+
         vertices = floatArrayOf(
             screenTopRight.x, screenTopRight.y, 0.0f,
             screenBottomRight.x, screenBottomRight.y, 0.0f,
