@@ -7,6 +7,8 @@ import javax.microedition.khronos.opengles.GL10
 
 val rootObject: GameObject = GameObject("root")
 var time: Float = 0f
+var deltaTime: Float = 0f
+private var lastTime: Float = 0f
 class GLRenderer : GLSurfaceView.Renderer {
     private var initialized = false
     private var canUpdate = false
@@ -26,6 +28,8 @@ class GLRenderer : GLSurfaceView.Renderer {
 
     override fun onDrawFrame(gl: GL10?) {
         time = (System.nanoTime() - startTime) / 1_000_000_000f
+        deltaTime = time - lastTime
+        lastTime = time
         if (initialized && !canUpdate) {
             canUpdate = true
         }

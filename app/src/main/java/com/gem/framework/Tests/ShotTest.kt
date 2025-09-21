@@ -4,10 +4,6 @@ import com.gem.framework.*
 import com.gem.framework.utils.*
 //TODO: заменить android.view.MotionEvent на аналогичный com.gem.framework.utils.MotionEvent
 import android.view.MotionEvent
-import com.example.myapplication3.components.AutoDesComponent
-import com.example.myapplication3.components.RectangleComponent
-import com.example.myapplication3.components.TreeAnalyzerComponent
-import kotlin.random.Random
 
 public class ShotTest : Component() {
 

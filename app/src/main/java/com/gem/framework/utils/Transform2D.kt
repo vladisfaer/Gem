@@ -4,9 +4,9 @@ import com.gem.framework.*
 import java.lang.ref.WeakReference
 
 class Transform2D(val gameObject: GameObject) {
-    private var localPosition = Vector2.Zero
-    private var localRotation = 0f
-    private var localScale = Vector2.One
+    private var localPosition: Vector2 = Vector2.Zero
+    private var localRotation: Float = 0f
+    private var localScale: Vector2 = Vector2.One
 
     private var parent: WeakReference<Transform2D>? = null
     private var hasParent: Boolean = false
@@ -27,14 +27,19 @@ class Transform2D(val gameObject: GameObject) {
         get() = localScale
         set(value) { localScale = value }
 
-    val globalPosition: Vector2
+    var globalPosition: Vector2
         get() = if (hasParent) parent?.get()?.globalMatrix()?.transform(localPosition) ?: localPosition else localPosition
+        set(value) { localPosition = value - (gameObject.parent?.transform?.globalPosition ?: Vector2(0f, 0f)) }
 
-    val globalRotation: Float
+    var globalRotation: Float
         get() = if (hasParent) parent?.get()?.globalRotation?.plus(localRotation) ?: localRotation else localRotation
+        set(value) { localRotation = value - (gameObject.parent?.transform?.globalRotation ?: 0f) }
 
     val globalScale: Vector2
-        get() = if (hasParent) parent?.get()?.globalScale?.times(localScale) ?: localScale else localScale
+        get() {
+            val gm = globalMatrix()
+            return Vector2(gm.values[0],gm.values[4])
+        }
 
     fun updateParentReference() {
         val parentObject = gameObject.parent

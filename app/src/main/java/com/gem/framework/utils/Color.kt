@@ -11,4 +11,8 @@ data class Color(var r: Float = 1f, var g: Float = 1f, var b: Float = 1f, var a:
         val Black = Color(0f, 0f, 0f)
         val Transparent = Color(0f, 0f, 0f, 0f)
     }
+
+    public fun toAndroidColor() : Int{
+        return android.graphics.Color.argb((a*256f).toInt(),(r*256f).toInt(),(g*256f).toInt(),(b*256f).toInt()) //(a,r,g,b)
+    }
 }

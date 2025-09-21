@@ -138,6 +138,7 @@ class Matrix3(
     }
 
     companion object {
-        fun identity() = Matrix3()
+        val identity: Matrix3
+            get() = Matrix3()
     }
 }

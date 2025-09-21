@@ -3,11 +3,11 @@ package com.gem.framework
 import com.gem.framework.utils.*
 import com.gem.framework.components.*
 
-class GameObject(override var name: String = "GameObject") : Updatable() {
+open class GameObject(override var name: String = "GameObject") : Updatable() {
     val transform = Transform2D(this)
     val updatables = mutableListOf<Updatable>()
-    private var updateOrder: List<() -> Unit> = emptyList()
-    private var changedUpdateOrder = true
+    protected open var updateList: List<() -> Unit> = emptyList()
+    protected open var changedUpdateOrder = true
 
     override var parent: GameObject? = null
         set(value) {
@@ -18,6 +18,16 @@ class GameObject(override var name: String = "GameObject") : Updatable() {
 
     inline fun <reified T : Updatable> get(): T? {
         return updatables.firstOrNull { it is T } as? T
+    }
+
+    fun getChildren(): List<GameObject> {
+        val children = mutableListOf<GameObject>()
+        updatables.forEach {
+            if(it is GameObject) {
+                children.add(it)
+            }
+        }
+        return children
     }
 
     fun add(updatable: Updatable): Updatable {
@@ -73,23 +83,21 @@ class GameObject(override var name: String = "GameObject") : Updatable() {
 
     override fun getUpdateOrder(): List<() -> Unit> {
         rebuildUpdateOrder()
-        return updateOrder
+        return updateList
     }
 
-    fun rebuildUpdateOrder() {
+    open fun rebuildUpdateOrder() {
         if (!changedUpdateOrder) return
-
-        updateOrder = updatables.flatMap{it.getUpdateOrder()}
-
+        updateList = updatables.flatMap{it.getUpdateOrder()}
         changedUpdateOrder = false
     }
 
     fun tryUpdateAll() {
         if (changedUpdateOrder) rebuildUpdateOrder()
-        updateOrder.forEach { it.invoke() }
+        updateList.forEach { it.invoke() }
     }
 
-    override public fun update() {
+    public override fun update() {
         tryUpdateAll()
     }
 

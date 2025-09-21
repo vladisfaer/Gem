@@ -1,6 +1,5 @@
-package com.example.myapplication3.components
+package com.gem.framework.components
 
-import com.gem.framework.components.Component
 import com.gem.framework.time
 
 class TreeAnalyzerComponent(override var name: String = "Analyzer"): Component() {
