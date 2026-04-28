@@ -9,8 +9,13 @@ import java.nio.FloatBuffer
 
 class SpriteRendererComponent(private var texture: Texture) : Component() {
 
-    private var vertices = FloatArray(12)
-    private var textureCoordinates = FloatArray(8)
+    private val vertices = FloatArray(12)
+    private val textureCoordinates = floatArrayOf(
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+        1.0f, 0.0f
+    )
 
     private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
         .order(ByteOrder.nativeOrder())
@@ -18,41 +23,23 @@ class SpriteRendererComponent(private var texture: Texture) : Component() {
 
     private val textureBuffer: FloatBuffer = ByteBuffer.allocateDirect(textureCoordinates.size * 4)
         .order(ByteOrder.nativeOrder())
-        .asFloatBuffer()
-
-    private val vertexShaderCode = """
-        attribute vec4 vPosition;
-        attribute vec2 aTexCoord;
-        varying vec2 vTexCoord;
-        void main() {
-            gl_Position = vPosition;
-            vTexCoord = aTexCoord;
+        .asFloatBuffer().apply {
+            put(textureCoordinates)
+            position(0)
         }
-    """
-
-    private val fragmentShaderCode = """
-        precision mediump float;
-        varying vec2 vTexCoord;
-        uniform sampler2D uTexture;
-        void main() {
-            gl_FragColor = texture2D(uTexture, vTexCoord);
-        }
-    """
 
     private val program: Int
 
     init {
-        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
-        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
+        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_CODE)
+        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_CODE)
 
         program = GLES20.glCreateProgram().apply {
             GLES20.glAttachShader(this, vertexShader)
             GLES20.glAttachShader(this, fragmentShader)
             GLES20.glLinkProgram(this)
+            checkProgramLink(this)
         }
-
-        GLES20.glEnable(GLES20.GL_BLEND)
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
     }
 
     override fun update() {
@@ -72,32 +59,23 @@ class SpriteRendererComponent(private var texture: Texture) : Component() {
 
         val globMat = transform.globalMatrix()
 
-        val screenTopRight = Camera.toScreenPosition(globMat.transform(topRight))
-        val screenBottomRight = Camera.toScreenPosition(globMat.transform(bottomRight))
-        val screenBottomLeft = Camera.toScreenPosition(globMat.transform(bottomLeft))
-        val screenTopLeft = Camera.toScreenPosition(globMat.transform(topLeft))
+        val screenTopRight = Camera.worldToViewport(globMat.transform(topRight))
+        val screenBottomRight = Camera.worldToViewport(globMat.transform(bottomRight))
+        val screenBottomLeft = Camera.worldToViewport(globMat.transform(bottomLeft))
+        val screenTopLeft = Camera.worldToViewport(globMat.transform(topLeft))
 
-        vertices = floatArrayOf(
-            screenTopRight.x, screenTopRight.y, 0.0f,
-            screenBottomRight.x, screenBottomRight.y, 0.0f,
-            screenBottomLeft.x, screenBottomLeft.y, 0.0f,
-            screenTopLeft.x, screenTopLeft.y, 0.0f
-        )
-
-        textureCoordinates = floatArrayOf(
-            0.0f, 0.0f,
-            0.0f, 1.0f,
-            1.0f, 1.0f,
-            1.0f, 0.0f
-        )
+        vertices[0] = screenTopRight.x;    vertices[1]  = screenTopRight.y;    vertices[2]  = 0.0f
+        vertices[3] = screenBottomRight.x; vertices[4]  = screenBottomRight.y; vertices[5]  = 0.0f
+        vertices[6] = screenBottomLeft.x;  vertices[7]  = screenBottomLeft.y;  vertices[8]  = 0.0f
+        vertices[9] = screenTopLeft.x;     vertices[10] = screenTopLeft.y;     vertices[11] = 0.0f
 
         vertexBuffer.clear()
         vertexBuffer.put(vertices)
         vertexBuffer.position(0)
 
-        textureBuffer.clear()
-        textureBuffer.put(textureCoordinates)
-        textureBuffer.position(0)
+        // Прозрачность включаем перед каждой отрисовкой — глобальное состояние GL ненадёжно.
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
 
         GLES20.glUseProgram(program)
 
@@ -120,20 +98,54 @@ class SpriteRendererComponent(private var texture: Texture) : Component() {
         GLES20.glDisableVertexAttribArray(texCoordHandle)
     }
 
-    private fun loadShader(type: Int, shaderCode: String): Int {
-        return GLES20.glCreateShader(type).also { shader ->
-            GLES20.glShaderSource(shader, shaderCode)
-            GLES20.glCompileShader(shader)
-            val compiled = IntArray(1)
-            GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0)
-            if (compiled[0] == 0) {
-                GLES20.glDeleteShader(shader)
-                throw RuntimeException("Ошибка компиляции шейдера: ${GLES20.glGetShaderInfoLog(shader)}")
-            }
+    override fun onRemove() {
+        if (program != 0) {
+            GLES20.glDeleteProgram(program)
         }
     }
 
-    override fun copy(): SpriteRendererComponent {
-        return SpriteRendererComponent(texture)
+    companion object {
+        private const val VERTEX_SHADER_CODE = """
+            attribute vec4 vPosition;
+            attribute vec2 aTexCoord;
+            varying vec2 vTexCoord;
+            void main() {
+                gl_Position = vPosition;
+                vTexCoord = aTexCoord;
+            }
+        """
+
+        private const val FRAGMENT_SHADER_CODE = """
+            precision mediump float;
+            varying vec2 vTexCoord;
+            uniform sampler2D uTexture;
+            void main() {
+                gl_FragColor = texture2D(uTexture, vTexCoord);
+            }
+        """
+
+        private fun loadShader(type: Int, shaderCode: String): Int {
+            return GLES20.glCreateShader(type).also { shader ->
+                GLES20.glShaderSource(shader, shaderCode)
+                GLES20.glCompileShader(shader)
+                val compiled = IntArray(1)
+                GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0)
+                if (compiled[0] == 0) {
+                    val log = GLES20.glGetShaderInfoLog(shader)
+                    GLES20.glDeleteShader(shader)
+                    throw ShaderCompilationException("Ошибка компиляции шейдера: $log")
+                }
+            }
+        }
+
+        private fun checkProgramLink(program: Int) {
+            val linked = IntArray(1)
+            GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, linked, 0)
+            if (linked[0] == 0) {
+                val log = GLES20.glGetProgramInfoLog(program)
+                GLES20.glDeleteProgram(program)
+                throw ShaderCompilationException("Ошибка линковки шейдерной программы: $log")
+            }
+        }
     }
 }

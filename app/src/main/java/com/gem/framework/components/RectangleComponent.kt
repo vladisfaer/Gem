@@ -7,40 +7,28 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import com.gem.framework.utils.*
 
-class RectangleComponent(override var name: String = "graphics", col: Color = Color(1f, 0f, 1.0f, 0.125f)) : Component() {
+class RectangleComponent(
+    override var name: String = "graphics",
+    var color: Color = Color(1f, 0f, 1.0f, 0.125f)
+) : Component() {
 
-    var color = col
     private var vertices = FloatArray(12)
 
     private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer()
 
-    private val vertexShaderCode = """
-        attribute vec4 vPosition;
-        void main() {
-            gl_Position = vPosition;
-        }
-    """
-
-    private val fragmentShaderCode = """
-        precision mediump float;
-        uniform vec4 vColor;
-        void main() {
-            gl_FragColor = vColor;
-        }
-    """
-
     private val program: Int
 
     init {
-        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
-        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
+        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_CODE)
+        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_CODE)
 
         program = GLES20.glCreateProgram().apply {
             GLES20.glAttachShader(this, vertexShader)
             GLES20.glAttachShader(this, fragmentShader)
             GLES20.glLinkProgram(this)
+            checkProgramLink(this)
         }
     }
 
@@ -61,17 +49,15 @@ class RectangleComponent(override var name: String = "graphics", col: Color = Co
 
         val globMat = transform.globalMatrix()
 
-        val screenTopRight = Camera.toScreenPosition(globMat.transform(topRight))
-        val screenBottomRight = Camera.toScreenPosition(globMat.transform(bottomRight))
-        val screenBottomLeft = Camera.toScreenPosition(globMat.transform(bottomLeft))
-        val screenTopLeft = Camera.toScreenPosition(globMat.transform(topLeft))
+        val screenTopRight = Camera.worldToViewport(globMat.transform(topRight))
+        val screenBottomRight = Camera.worldToViewport(globMat.transform(bottomRight))
+        val screenBottomLeft = Camera.worldToViewport(globMat.transform(bottomLeft))
+        val screenTopLeft = Camera.worldToViewport(globMat.transform(topLeft))
 
-        vertices = floatArrayOf(
-            screenTopRight.x, screenTopRight.y, 0.0f,
-            screenBottomRight.x, screenBottomRight.y, 0.0f,
-            screenBottomLeft.x, screenBottomLeft.y, 0.0f,
-            screenTopLeft.x, screenTopLeft.y, 0.0f
-        )
+        vertices[0] = screenTopRight.x;    vertices[1]  = screenTopRight.y;    vertices[2]  = 0.0f
+        vertices[3] = screenBottomRight.x; vertices[4]  = screenBottomRight.y; vertices[5]  = 0.0f
+        vertices[6] = screenBottomLeft.x;  vertices[7]  = screenBottomLeft.y;  vertices[8]  = 0.0f
+        vertices[9] = screenTopLeft.x;     vertices[10] = screenTopLeft.y;     vertices[11] = 0.0f
 
         vertexBuffer.clear()
         vertexBuffer.put(vertices)
@@ -87,18 +73,50 @@ class RectangleComponent(override var name: String = "graphics", col: Color = Co
         GLES20.glDisableVertexAttribArray(positionHandle)
     }
 
-    private fun loadShader(type: Int, shaderCode: String): Int {
-        return GLES20.glCreateShader(type).also { shader ->
-            GLES20.glShaderSource(shader, shaderCode)
-            GLES20.glCompileShader(shader)
-            val compiled = IntArray(1)
-            GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0)
-            if (compiled[0] == 0) {
-                GLES20.glDeleteShader(shader)
-                throw RuntimeException("Ошибка компиляции шейдера: ${GLES20.glGetShaderInfoLog(shader)}")
-            }
+    override fun onRemove() {
+        if (program != 0) {
+            GLES20.glDeleteProgram(program)
         }
     }
 
-    override fun copy() : RectangleComponent { return RectangleComponent(name, color) }
+    companion object {
+        private const val VERTEX_SHADER_CODE = """
+            attribute vec4 vPosition;
+            void main() {
+                gl_Position = vPosition;
+            }
+        """
+
+        private const val FRAGMENT_SHADER_CODE = """
+            precision mediump float;
+            uniform vec4 vColor;
+            void main() {
+                gl_FragColor = vColor;
+            }
+        """
+
+        private fun loadShader(type: Int, shaderCode: String): Int {
+            return GLES20.glCreateShader(type).also { shader ->
+                GLES20.glShaderSource(shader, shaderCode)
+                GLES20.glCompileShader(shader)
+                val compiled = IntArray(1)
+                GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0)
+                if (compiled[0] == 0) {
+                    val log = GLES20.glGetShaderInfoLog(shader)
+                    GLES20.glDeleteShader(shader)
+                    throw ShaderCompilationException("Ошибка компиляции шейдера: $log")
+                }
+            }
+        }
+
+        private fun checkProgramLink(program: Int) {
+            val linked = IntArray(1)
+            GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, linked, 0)
+            if (linked[0] == 0) {
+                val log = GLES20.glGetProgramInfoLog(program)
+                GLES20.glDeleteProgram(program)
+                throw ShaderCompilationException("Ошибка линковки шейдерной программы: $log")
+            }
+        }
+    }
 }

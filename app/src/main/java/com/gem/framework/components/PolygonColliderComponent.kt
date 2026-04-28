@@ -6,7 +6,7 @@ import org.jbox2d.common.Vec2
 import com.gem.framework.utils.*
 
 class PolygonColliderComponent(
-    private val polygon: Polygon,
+    val polygon: Polygon,
     density: Float = 1f,
     friction: Float = 0.5f,
     restitution: Float = 0.0f
@@ -18,7 +18,7 @@ class PolygonColliderComponent(
             ?: gameObject.transform).globalPosition - gameObject.transform.globalPosition
         val relativeRotation = (rigidbody?.gameObject?.transform
             ?: gameObject.transform).globalRotation - gameObject.transform.globalRotation
-        val relativeTransform = GameObject().transform.apply{
+        val relativeTransform = GameObject().transform.apply {
             position = relativePosition
             rotation = relativeRotation
             scale = globalTransform.scale
@@ -31,9 +31,5 @@ class PolygonColliderComponent(
             }
             set(transformedVertices.toTypedArray(), transformedVertices.size)
         }
-    }
-
-    override fun copy(): PolygonColliderComponent {
-        return PolygonColliderComponent(polygon, density, friction, restitution)
     }
 }

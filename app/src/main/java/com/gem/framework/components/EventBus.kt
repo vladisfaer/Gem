@@ -1,46 +1,108 @@
 package com.gem.framework.components
 
-class EventBus(
-    private val listeners: MutableMap<String, MutableList<(Any?) -> Unit>> = mutableMapOf<String, MutableList<(Any?) -> Unit>>(),
-    private val delayedEvents: MutableList<Pair<String, Any?>> = mutableListOf<Pair<String, Any?>>()
-    ):Component(){
-    fun subscribe(eventType: String, listener: (Any?) -> Unit) {
-        listeners.computeIfAbsent(eventType) { mutableListOf() }.add(listener)
+import com.gem.framework.events.EventData
+import kotlin.reflect.KClass
+
+class EventBus : Component() {
+
+    private val nameListeners = mutableMapOf<String, MutableList<(Any?) -> Unit>>()
+    private val typedListeners = mutableMapOf<KClass<out EventData>, MutableList<(EventData) -> Unit>>()
+    private val delayedNamed = mutableListOf<Pair<String, Any?>>()
+    private val delayedTyped = mutableListOf<EventData>()
+
+    /**
+     * Заранее регистрирует именованное событие. После этого post() будет
+     * буферизовать его, даже если на момент публикации нет слушателей.
+     */
+    fun register(eventType: String) {
+        nameListeners.getOrPut(eventType) { mutableListOf() }
     }
 
+    /**
+     * Аналогично, но для типизированных событий (по KClass).
+     */
+    fun register(eventClass: KClass<out EventData>) {
+        typedListeners.getOrPut(eventClass) { mutableListOf() }
+    }
+
+    fun subscribe(eventType: String, listener: (Any?) -> Unit) {
+        nameListeners.getOrPut(eventType) { mutableListOf() }.add(listener)
+    }
+
+    fun <T : EventData> subscribe(eventClass: KClass<T>, listener: (T) -> Unit) {
+        @Suppress("UNCHECKED_CAST")
+        typedListeners.getOrPut(eventClass) { mutableListOf() }
+            .add(listener as (EventData) -> Unit)
+    }
+
+    inline fun <reified T : EventData> subscribe(noinline listener: (T) -> Unit) {
+        subscribe(T::class, listener)
+    }
+
+    fun unsubscribe(eventType: String, listener: (Any?) -> Unit) {
+        nameListeners[eventType]?.remove(listener)
+    }
+
+    fun <T : EventData> unsubscribe(eventClass: KClass<T>, listener: (T) -> Unit) {
+        @Suppress("UNCHECKED_CAST")
+        typedListeners[eventClass]?.remove(listener as (EventData) -> Unit)
+    }
+
+    /**
+     * Публикация по имени. Если событие не зарегистрировано и нет слушателей —
+     * молча игнорируется, чтобы не плодить мусор. Используйте register(),
+     * если хотите буферизовать раннюю публикацию.
+     */
     fun post(eventType: String, data: Any? = null) {
-        if (listeners.containsKey(eventType)) {
-            delayedEvents.add(Pair(eventType, data))
+        if (nameListeners.containsKey(eventType)) {
+            delayedNamed.add(eventType to data)
+        }
+    }
+
+    /**
+     * Публикация по объекту EventData. Тип события определяется по его классу.
+     */
+    fun post(event: EventData) {
+        if (typedListeners.containsKey(event::class)) {
+            delayedTyped.add(event)
         }
     }
 
     fun processDelayedEvents() {
-        for ((eventType, data) in delayedEvents) {
-            listeners[eventType]?.forEach { it.invoke(data) }
+        if (delayedNamed.isNotEmpty()) {
+            val snapshot = delayedNamed.toList()
+            delayedNamed.clear()
+            for ((type, data) in snapshot) {
+                nameListeners[type]?.forEach { it.invoke(data) }
+            }
         }
-        delayedEvents.clear()
-    }
-
-    fun unsubscribe(eventType: String, listener: (Any?) -> Unit) {
-        listeners[eventType]?.remove(listener)
-        if (listeners[eventType].isNullOrEmpty()) {
-            listeners.remove(eventType)
+        if (delayedTyped.isNotEmpty()) {
+            val snapshot = delayedTyped.toList()
+            delayedTyped.clear()
+            for (event in snapshot) {
+                typedListeners[event::class]?.forEach { it.invoke(event) }
+            }
         }
     }
 
     fun clearEvent(eventType: String) {
-        listeners.remove(eventType)
+        nameListeners.remove(eventType)
+    }
+
+    fun clearEvent(eventClass: KClass<out EventData>) {
+        typedListeners.remove(eventClass)
     }
 
     fun clearAll() {
-        listeners.clear()
+        nameListeners.clear()
+        typedListeners.clear()
+        delayedNamed.clear()
+        delayedTyped.clear()
     }
-    
+
     override fun update() {
         processDelayedEvents()
     }
-    
-    override fun copy() : EventBus{
-        return EventBus(listeners, delayedEvents)
-    }
+
+    override fun copy(): EventBus = EventBus()
 }

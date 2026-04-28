@@ -33,8 +33,4 @@ class BoxColliderComponent(
             )
         }
     }
-
-    override fun copy(): BoxColliderComponent {
-        return BoxColliderComponent(width, height, density, friction, restitution)
-    }
 }

@@ -16,14 +16,38 @@ open class GameObject(override var name: String = "GameObject") : Updatable() {
             notifyParentOfChange()
         }
 
+    /** Получить первый Updatable указанного типа. */
     inline fun <reified T : Updatable> get(): T? {
         return updatables.firstOrNull { it is T } as? T
+    }
+
+    /** Получить Updatable по индексу в списке. */
+    fun get(index: Int): Updatable? = updatables.getOrNull(index)
+
+    /**
+     * Получить N-й по счёту Updatable указанного типа.
+     * Например, get<RectangleComponent>(2) — третий прямоугольник на объекте.
+     *
+     * @JvmName нужен, потому что после стирания типов сигнатура совпадает
+     * с get(index: Int): Updatable? и без переименования возникает
+     * platform declaration clash на JVM.
+     */
+    @JvmName("getTypedAt")
+    inline fun <reified T : Updatable> get(index: Int): T? {
+        var count = 0
+        for (u in updatables) {
+            if (u is T) {
+                if (count == index) return u
+                count++
+            }
+        }
+        return null
     }
 
     fun getChildren(): List<GameObject> {
         val children = mutableListOf<GameObject>()
         updatables.forEach {
-            if(it is GameObject) {
+            if (it is GameObject) {
                 children.add(it)
             }
         }
@@ -31,14 +55,18 @@ open class GameObject(override var name: String = "GameObject") : Updatable() {
     }
 
     fun add(updatable: Updatable): Updatable {
-        if (updatable.initialized) { return updatable }
+        if (updatable.initialized) {
+            throw ComponentException(
+                "Невозможно добавить уже инициализированный объект '${updatable.name}'. " +
+                    "Используйте instantiate() для копирования или сначала уберите его из родителя."
+            )
+        }
         updatable.parent = this
         updatables.add(updatable)
         if (initialized) {
             updatable.postInit()
             notifyParentOfChange()
         }
-
         return updatable
     }
 
@@ -61,18 +89,17 @@ open class GameObject(override var name: String = "GameObject") : Updatable() {
     }
 
     fun instantiate(updatable: GameObject): GameObject {
-        val copy = updatable.copy()
+        val copy = updatable.copy() as GameObject
         this.add(copy)
         return copy
     }
-    
+
     override fun copy(): GameObject {
         val copy = GameObject(name)
         copy.transform.position = transform.position
         copy.transform.rotation = transform.rotation
         copy.transform.scale = transform.scale
-        copy.parent = parent
-        updatables.forEach{ copy.add(it.copy()) }
+        updatables.forEach { copy.add(it.copy()) }
         return copy
     }
 
@@ -88,7 +115,7 @@ open class GameObject(override var name: String = "GameObject") : Updatable() {
 
     open fun rebuildUpdateOrder() {
         if (!changedUpdateOrder) return
-        updateList = updatables.flatMap{it.getUpdateOrder()}
+        updateList = updatables.flatMap { it.getUpdateOrder() }
         changedUpdateOrder = false
     }
 

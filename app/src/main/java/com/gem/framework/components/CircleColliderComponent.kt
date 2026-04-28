@@ -18,8 +18,4 @@ class CircleColliderComponent(
             m_p.set(-relativePosition.x, -relativePosition.y)
         }
     }
-
-    override fun copy(): CircleColliderComponent {
-        return CircleColliderComponent(radius, density, friction, restitution)
-    }
 }

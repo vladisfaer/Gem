@@ -7,40 +7,31 @@ import java.nio.FloatBuffer
 import com.gem.framework.utils.*
 import com.gem.framework.*
 
-class CircleComponent(col: Color = Color(1f, 0f, 1.0f, 1.0f), private val radius: Float = 0.5f, private val segments: Int = 100) : Component() {
+class CircleComponent(
+    var color: Color = Color(1f, 0f, 1.0f, 1.0f),
+    private val radius: Float = 0.5f,
+    private val segments: Int = 100
+) : Component() {
 
-    public var color = col
-    private var vertices = FloatArray(segments * 3) // 3 компоненты на вершину
+    private val localVertices: FloatArray = FloatArray(segments * 3)
+    private val vertices: FloatArray = FloatArray(segments * 3)
 
     private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer()
 
-    private val vertexShaderCode = """
-        attribute vec4 vPosition;
-        void main() {
-            gl_Position = vPosition;
-        }
-    """
-
-    private val fragmentShaderCode = """
-        precision mediump float;
-        uniform vec4 vColor;
-        void main() {
-            gl_FragColor = vColor;
-        }
-    """
-
     private val program: Int
 
     init {
-        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
-        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
+        generateLocalVertices()
+        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_CODE)
+        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_CODE)
 
         program = GLES20.glCreateProgram().apply {
             GLES20.glAttachShader(this, vertexShader)
             GLES20.glAttachShader(this, fragmentShader)
             GLES20.glLinkProgram(this)
+            checkProgramLink(this)
         }
     }
 
@@ -50,23 +41,13 @@ class CircleComponent(col: Color = Color(1f, 0f, 1.0f, 1.0f), private val radius
 
     fun draw() {
         val transform = gameObject.transform
-
-        // Расчет вершин круга с учетом радиуса и сегментов
-        generateCircleVertices()
-
-        // Преобразуем координаты вершин в экранные координаты
         val globMat = transform.globalMatrix()
-        val screenVertices = mutableListOf<Vector2>()
-        for (i in 0 until segments) {
-            val x = vertices[i * 3]
-            val y = vertices[i * 3 + 1]
-            screenVertices.add(Camera.toScreenPosition(globMat.transform(Vector2(x, y))))
-        }
 
-        // Обновляем массив вершин с учётом глобальных координат
-        vertices = FloatArray(segments * 3)
+        val tmp = Vector2(0f, 0f)
         for (i in 0 until segments) {
-            val screenVertex = screenVertices[i]
+            tmp.x = localVertices[i * 3]
+            tmp.y = localVertices[i * 3 + 1]
+            val screenVertex = Camera.worldToViewport(globMat.transform(tmp))
             vertices[i * 3] = screenVertex.x
             vertices[i * 3 + 1] = screenVertex.y
             vertices[i * 3 + 2] = 0.0f
@@ -86,35 +67,63 @@ class CircleComponent(col: Color = Color(1f, 0f, 1.0f, 1.0f), private val radius
         GLES20.glDisableVertexAttribArray(positionHandle)
     }
 
-    private fun generateCircleVertices() {
+    private fun generateLocalVertices() {
         val angleStep = 2 * Math.PI / segments
         var angle = 0.0
-
-        // Вершины по кругу
         for (i in 0 until segments) {
             val x = (radius * Math.cos(angle)).toFloat()
             val y = (radius * Math.sin(angle)).toFloat()
-            vertices[i * 3] = x
-            vertices[i * 3 + 1] = y
-            vertices[i * 3 + 2] = 0.0f
+            localVertices[i * 3] = x
+            localVertices[i * 3 + 1] = y
+            localVertices[i * 3 + 2] = 0.0f
             angle += angleStep
         }
     }
 
-    private fun loadShader(type: Int, shaderCode: String): Int {
-        return GLES20.glCreateShader(type).also { shader ->
-            GLES20.glShaderSource(shader, shaderCode)
-            GLES20.glCompileShader(shader)
-            val compiled = IntArray(1)
-            GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0)
-            if (compiled[0] == 0) {
-                GLES20.glDeleteShader(shader)
-                throw RuntimeException("Ошибка компиляции шейдера: ${GLES20.glGetShaderInfoLog(shader)}")
-            }
+    override fun onRemove() {
+        if (program != 0) {
+            GLES20.glDeleteProgram(program)
         }
     }
 
-    override fun copy(): CircleComponent {
-        return CircleComponent(color, radius, segments)
+    companion object {
+        private const val VERTEX_SHADER_CODE = """
+            attribute vec4 vPosition;
+            void main() {
+                gl_Position = vPosition;
+            }
+        """
+
+        private const val FRAGMENT_SHADER_CODE = """
+            precision mediump float;
+            uniform vec4 vColor;
+            void main() {
+                gl_FragColor = vColor;
+            }
+        """
+
+        private fun loadShader(type: Int, shaderCode: String): Int {
+            return GLES20.glCreateShader(type).also { shader ->
+                GLES20.glShaderSource(shader, shaderCode)
+                GLES20.glCompileShader(shader)
+                val compiled = IntArray(1)
+                GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0)
+                if (compiled[0] == 0) {
+                    val log = GLES20.glGetShaderInfoLog(shader)
+                    GLES20.glDeleteShader(shader)
+                    throw ShaderCompilationException("Ошибка компиляции шейдера: $log")
+                }
+            }
+        }
+
+        private fun checkProgramLink(program: Int) {
+            val linked = IntArray(1)
+            GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, linked, 0)
+            if (linked[0] == 0) {
+                val log = GLES20.glGetProgramInfoLog(program)
+                GLES20.glDeleteProgram(program)
+                throw ShaderCompilationException("Ошибка линковки шейдерной программы: $log")
+            }
+        }
     }
 }

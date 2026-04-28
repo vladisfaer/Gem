@@ -1,7 +1,5 @@
 package com.gem.framework.utils
 
-import kotlin.math.*
-
 data class Color(var r: Float = 1f, var g: Float = 1f, var b: Float = 1f, var a: Float = 1f) {
     companion object {
         val Red = Color(1f, 0f, 0f)
@@ -12,7 +10,11 @@ data class Color(var r: Float = 1f, var g: Float = 1f, var b: Float = 1f, var a:
         val Transparent = Color(0f, 0f, 0f, 0f)
     }
 
-    public fun toAndroidColor() : Int{
-        return android.graphics.Color.argb((a*256f).toInt(),(r*256f).toInt(),(g*256f).toInt(),(b*256f).toInt()) //(a,r,g,b)
+    fun toAndroidColor(): Int {
+        val ai = (a * 255f).toInt().coerceIn(0, 255)
+        val ri = (r * 255f).toInt().coerceIn(0, 255)
+        val gi = (g * 255f).toInt().coerceIn(0, 255)
+        val bi = (b * 255f).toInt().coerceIn(0, 255)
+        return android.graphics.Color.argb(ai, ri, gi, bi)
     }
 }

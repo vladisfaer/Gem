@@ -1,7 +1,6 @@
 package com.gem.framework.components
 
 import com.gem.framework.GameObject
-import java.lang.ref.WeakReference
 
 abstract class Component(override var name: String = "Component") : Updatable() {
     val gameObject: GameObject
@@ -18,8 +17,6 @@ abstract class Component(override var name: String = "Component") : Updatable() 
     override fun onRemove() {}
 
     override fun getUpdateOrder(): List<() -> Unit> {
-        return listOf {tryUpdate()}
+        return listOf { tryUpdate() }
     }
-
-    abstract override fun copy() : Component
 }

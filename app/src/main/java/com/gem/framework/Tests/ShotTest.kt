@@ -1,14 +1,13 @@
 package com.gem.framework.components
 
 import com.gem.framework.*
+import com.gem.framework.events.TouchDownEvent
 import com.gem.framework.utils.*
-//TODO: заменить android.view.MotionEvent на аналогичный com.gem.framework.utils.MotionEvent
-import android.view.MotionEvent
 
-public class ShotTest : Component() {
+class ShotTest : Component() {
 
-    private val bullet = GameObject("bullet").apply{
-        transform.scale = Vector2(0.1f,0.1f)
+    private val bullet = GameObject("bullet").apply {
+        transform.scale = Vector2(0.1f, 0.1f)
         add(RectangleComponent())
         add(TreeAnalyzerComponent())
         add(AutoDesComponent())
@@ -16,21 +15,10 @@ public class ShotTest : Component() {
     }
 
     override fun onPostInit() {
-        rootObject.get<EventBus>()!!.subscribe("touch_event_down") { event ->
-            shoot(event as MotionEvent)
+        rootObject.get<EventBus>()?.subscribe<TouchDownEvent> { event ->
+            rootObject.instantiate(bullet).apply {
+                transform.position = event.worldPosition()
+            }
         }
-    }
-    
-    fun shoot(event: MotionEvent) {
-        val x = event.getAxisValue(MotionEvent.AXIS_X) / 1080f - 0.5f
-        val y = -event.getAxisValue(MotionEvent.AXIS_Y) / 2160f + 0.5f
-        val cords = Vector2(event.getAxisValue(MotionEvent.AXIS_X),event.getAxisValue(MotionEvent.AXIS_Y))
-        rootObject.instantiate(bullet).apply{
-            transform.position = Camera.toWorldPosition(cords)
-        }
-    }
-    
-    override fun copy() : ShotTest {
-        return ShotTest()
     }
 }

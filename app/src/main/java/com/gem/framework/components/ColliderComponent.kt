@@ -5,16 +5,10 @@ import org.jbox2d.collision.shapes.Shape
 import com.gem.framework.*
 
 abstract class ColliderComponent(
-    dens: Float = 1f,
-    fric: Float = 0.5f,
-    rest: Float = 0.0f
+    var density: Float = 1f,
+    var friction: Float = 0.5f,
+    var restitution: Float = 0.0f
 ) : Component() {
-    var density = dens
-        set(value) {field = value; updateShape()}
-    var friction = fric
-        set(value) {field = value; updateShape()}
-    var restitution = rest
-        set(value) {field = value; updateShape()}
 
     lateinit var shape: Shape
     private var lastShape: Shape? = null
@@ -25,7 +19,7 @@ abstract class ColliderComponent(
 
     fun updateShape() {
         initializeShape()
-        if(shape != lastShape){
+        if (shape != lastShape) {
             fixture?.m_shape = shape
         }
         lastShape = shape
@@ -34,12 +28,10 @@ abstract class ColliderComponent(
     override fun update() {
         if (rigidbody == null) {
             findRigidbody(gameObject)
-        } else {
-            //updateShape()
         }
     }
 
-    fun setFixtureData(infixture: Fixture){
+    fun setFixtureData(infixture: Fixture) {
         fixture = infixture
         fixture!!.userData = this
     }

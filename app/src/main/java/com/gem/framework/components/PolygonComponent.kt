@@ -7,41 +7,27 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
-class PolygonComponent(private val polygon: Polygon, col: Color = Color(1f, 1f, 1f, 1f)) : Component() {
+class PolygonComponent(
+    private val polygon: Polygon,
+    var color: Color = Color(1f, 1f, 1f, 1f)
+) : Component() {
 
-    private var color = col
     private val vertices = FloatArray(polygon.vertices.size * 3)
-    private val vertexBuffer: FloatBuffer
-
-    private val vertexShaderCode = """
-        attribute vec4 vPosition;
-        void main() {
-            gl_Position = vPosition;
-        }
-    """
-
-    private val fragmentShaderCode = """
-        precision mediump float;
-        uniform vec4 vColor;
-        void main() {
-            gl_FragColor = vColor;
-        }
-    """
+    private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
+        .order(ByteOrder.nativeOrder())
+        .asFloatBuffer()
 
     private val program: Int
 
     init {
-        vertexBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer()
-
-        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
-        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
+        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_CODE)
+        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_CODE)
 
         program = GLES20.glCreateProgram().apply {
             GLES20.glAttachShader(this, vertexShader)
             GLES20.glAttachShader(this, fragmentShader)
             GLES20.glLinkProgram(this)
+            checkProgramLink(this)
         }
     }
 
@@ -55,10 +41,10 @@ class PolygonComponent(private val polygon: Polygon, col: Color = Color(1f, 1f, 
         val globalMatrix = transform.globalMatrix()
 
         polygon.vertices.forEachIndexed { index, localVertex ->
-            val transformedVertex = Camera.toScreenPosition(globalMatrix.transform(localVertex))
-            vertices[index * 3] = transformedVertex.x  // x
-            vertices[index * 3 + 1] = transformedVertex.y  // y
-            vertices[index * 3 + 2] = 0.0f  // z
+            val transformedVertex = Camera.worldToViewport(globalMatrix.transform(localVertex))
+            vertices[index * 3] = transformedVertex.x
+            vertices[index * 3 + 1] = transformedVertex.y
+            vertices[index * 3 + 2] = 0.0f
         }
 
         vertexBuffer.clear()
@@ -81,20 +67,50 @@ class PolygonComponent(private val polygon: Polygon, col: Color = Color(1f, 1f, 
         GLES20.glDisableVertexAttribArray(positionHandle)
     }
 
-    private fun loadShader(type: Int, shaderCode: String): Int {
-        return GLES20.glCreateShader(type).also { shader ->
-            GLES20.glShaderSource(shader, shaderCode)
-            GLES20.glCompileShader(shader)
-            val compiled = IntArray(1)
-            GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0)
-            if (compiled[0] == 0) {
-                GLES20.glDeleteShader(shader)
-                throw RuntimeException("Ошибка компиляции шейдера: ${GLES20.glGetShaderInfoLog(shader)}")
-            }
+    override fun onRemove() {
+        if (program != 0) {
+            GLES20.glDeleteProgram(program)
         }
     }
 
-    override fun copy(): PolygonComponent {
-        return PolygonComponent(polygon, col = color)
+    companion object {
+        private const val VERTEX_SHADER_CODE = """
+            attribute vec4 vPosition;
+            void main() {
+                gl_Position = vPosition;
+            }
+        """
+
+        private const val FRAGMENT_SHADER_CODE = """
+            precision mediump float;
+            uniform vec4 vColor;
+            void main() {
+                gl_FragColor = vColor;
+            }
+        """
+
+        private fun loadShader(type: Int, shaderCode: String): Int {
+            return GLES20.glCreateShader(type).also { shader ->
+                GLES20.glShaderSource(shader, shaderCode)
+                GLES20.glCompileShader(shader)
+                val compiled = IntArray(1)
+                GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0)
+                if (compiled[0] == 0) {
+                    val log = GLES20.glGetShaderInfoLog(shader)
+                    GLES20.glDeleteShader(shader)
+                    throw ShaderCompilationException("Ошибка компиляции шейдера: $log")
+                }
+            }
+        }
+
+        private fun checkProgramLink(program: Int) {
+            val linked = IntArray(1)
+            GLES20.glGetProgramiv(program, GLES20.GL_LINK_STATUS, linked, 0)
+            if (linked[0] == 0) {
+                val log = GLES20.glGetProgramInfoLog(program)
+                GLES20.glDeleteProgram(program)
+                throw ShaderCompilationException("Ошибка линковки шейдерной программы: $log")
+            }
+        }
     }
 }

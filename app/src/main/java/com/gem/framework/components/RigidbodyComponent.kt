@@ -14,18 +14,23 @@ class RigidbodyComponent(
 ) : Component() {
     lateinit var body: Body
     private var lastTransform: Transform2D? = null
-//    public val colliders = mutableListOf<ColliderComponent>()
     lateinit var physicsWorld: PhysicsWorld
 
     override fun onPostInit() {
         var current: GameObject? = gameObject.parent
         while (current != null) {
-            if (current.get<PhysicsWorld>() != null){
-                physicsWorld = current.get<PhysicsWorld>() as PhysicsWorld
+            val pw = current.get<PhysicsWorld>()
+            if (pw != null) {
+                physicsWorld = pw
                 physicsWorld.specialUpdatables.add(this)
                 break
             }
             current = current.parent
+        }
+        if (!::physicsWorld.isInitialized) {
+            throw ComponentException(
+                "RigidbodyComponent: не найден PhysicsWorld выше по иерархии (объект '${gameObject.name}')"
+            )
         }
         initializeBody()
     }
@@ -38,24 +43,16 @@ class RigidbodyComponent(
         }
     }
 
-//    override fun updateCheck(): Boolean {
-//        return !hasRigidbodyInHierarchy(gameObject)
-//    }
-
     fun preUpdate() {
         if (::body.isInitialized) {
+            val gp = gameObject.transform.globalPosition
+            val gr = Math.toRadians(gameObject.transform.globalRotation.toDouble()).toFloat()
             if (
-                (body.position.x != gameObject.transform.globalPosition.x) or
-                (body.position.y != gameObject.transform.globalPosition.y) or
-                (body.angle != Math.toRadians(gameObject.transform.globalRotation.toDouble()).toFloat())
-            ){
-                body.setTransform(
-                    Vec2(
-                        gameObject.transform.globalPosition.x,
-                        gameObject.transform.globalPosition.y
-                    ),
-                    Math.toRadians(gameObject.transform.globalRotation.toDouble()).toFloat()
-                )
+                body.position.x != gp.x ||
+                body.position.y != gp.y ||
+                body.angle != gr
+            ) {
+                body.setTransform(Vec2(gp.x, gp.y), gr)
                 body.setAwake(true)
             }
         }
@@ -63,8 +60,9 @@ class RigidbodyComponent(
 
     fun initializeBody() {
         val bodyDef = BodyDef()
-        bodyDef.position.set(gameObject.transform.position.x, gameObject.transform.globalPosition.y)
-        bodyDef.angle = Math.toRadians(gameObject.transform.rotation.toDouble()).toFloat()
+        val gp = gameObject.transform.globalPosition
+        bodyDef.position.set(gp.x, gp.y)
+        bodyDef.angle = Math.toRadians(gameObject.transform.globalRotation.toDouble()).toFloat()
         bodyDef.type = bodyType
         body = physicsWorld.world.createBody(bodyDef)
     }
@@ -82,26 +80,8 @@ class RigidbodyComponent(
         if (::body.isInitialized) {
             physicsWorld.world.destroyBody(body)
         }
-    }
-
-    private fun hasRigidbodyInHierarchy(gameObject: GameObject): Boolean {
-        var current: GameObject? = gameObject.parent
-        while (current != null) {
-            if (current.get<RigidbodyComponent>() != null) return true
-            current = current.parent
+        if (::physicsWorld.isInitialized) {
+            physicsWorld.specialUpdatables.remove(this)
         }
-        return hasRigidbodyInDescendants(gameObject)
-    }
-
-    private fun hasRigidbodyInDescendants(gameObject: GameObject): Boolean {
-        if (gameObject.get<RigidbodyComponent>() != null) return true
-        gameObject.getChildren().forEach() {
-            hasRigidbodyInDescendants(it)
-        }
-        return false
-    }
-
-    override fun copy(): RigidbodyComponent {
-        return RigidbodyComponent()
     }
 }

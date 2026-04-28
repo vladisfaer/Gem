@@ -9,6 +9,7 @@ val rootObject: GameObject = GameObject("root")
 var time: Float = 0f
 var deltaTime: Float = 0f
 private var lastTime: Float = 0f
+
 class GLRenderer : GLSurfaceView.Renderer {
     private var initialized = false
     private var canUpdate = false
@@ -36,11 +37,11 @@ class GLRenderer : GLSurfaceView.Renderer {
         if (canUpdate) {
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
             rootObject.tryUpdateAll()
-        } else {
         }
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
+        Camera.onSurfaceResized(width, height)
     }
 }
