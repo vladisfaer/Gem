@@ -1,4 +1,4 @@
-package com.example.myapplication3
+package com.gem.editor
 
 import android.app.Activity
 import android.os.Bundle

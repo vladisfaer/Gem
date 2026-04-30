@@ -16,4 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "My Application3"
 
-include(":app")
+include(":app",":framework")

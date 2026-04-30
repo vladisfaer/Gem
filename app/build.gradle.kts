@@ -2,15 +2,16 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("com.gem.plugin")
     //kotlin("plugin.power-assert") version "2.0.0"
 }
 
 android {
-    namespace = "com.example.myapplication3"
+    namespace = "com.gem.editor"
     compileSdk = 33
     
     defaultConfig {
-        applicationId = "com.example.myapplication3"
+        applicationId = "com.gem.editor"
         minSdk = 24
         targetSdk = 33
         versionCode = 1
@@ -45,7 +46,7 @@ dependencies{
     implementation("org.jbox2d:jbox2d-library:2.2.1.1")
     implementation("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
     implementation("org.jetbrains.kotlin:kotlin-test:2.0.21")
-
+    implementation(project(":framework"))
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
