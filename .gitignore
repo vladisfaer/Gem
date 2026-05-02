@@ -84,3 +84,7 @@ lint/tmp/
 
 # AndroidIDE
 .androidide/
+
+framework/build/
+app/build/
+buildSrc/build/

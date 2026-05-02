@@ -14,6 +14,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "My Application3"
+rootProject.name = "Gem"
 
 include(":app",":framework")
