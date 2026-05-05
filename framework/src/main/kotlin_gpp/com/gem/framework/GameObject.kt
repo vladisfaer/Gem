@@ -54,7 +54,7 @@ open class GameObject(override var name: String = "GameObject") : Updatable() {
         return children
     }
 
-    fun add(updatable: Updatable): Updatable {
+    fun <T : Updatable> add(updatable: T): T {
         if (updatable.initialized) {
             throw ComponentException(
                 "Невозможно добавить уже инициализированный объект '${updatable.name}'. " +
@@ -83,9 +83,13 @@ open class GameObject(override var name: String = "GameObject") : Updatable() {
     }
 
     fun destroy() {
-        updatables.reversed().forEach { it.onRemove() }
-        updatables.clear()
-        parent?.remove(this)
+        if (parent != null) {
+            updatables.reversed().forEach {
+                it.onRemove()
+            }
+            updatables.clear()
+            parent?.remove(this)
+        }
     }
 
     fun instantiate(updatable: GameObject): GameObject {
