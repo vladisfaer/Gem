@@ -8,16 +8,16 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
 class PolygonComponent(
-    private val polygon: Polygon,
+    private val polygon: Polygon = Polygon.Square,
     var color: Color = Color(1f, 1f, 1f, 1f)
 ) : Component() {
 
-    private val vertices = FloatArray(polygon.vertices.size * 3)
-    private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
+    @DontSave private val vertices = FloatArray(polygon.vertices.size * 3)
+    @DontSave private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer()
 
-    private val program: Int
+    @DontSave private val program: Int
 
     init {
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_CODE)

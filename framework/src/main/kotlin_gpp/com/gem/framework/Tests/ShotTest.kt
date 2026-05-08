@@ -16,8 +16,8 @@ class ShotTest : Component() {
 
     override fun onPostInit() {
         rootObject.get<EventBus>()?.subscribe<TouchDownEvent> { event ->
-            rootObject.instantiate(bullet).apply {
-                transform.position = event.worldPosition()
+            gameObject.instantiate(bullet).apply {
+                transform.globalPosition = event.worldPosition()
             }
         }
     }

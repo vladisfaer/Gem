@@ -12,13 +12,13 @@ class RectangleComponent(
     var color: Color = Color(1f, 0f, 1.0f, 0.125f)
 ) : Component() {
 
-    private var vertices = FloatArray(12)
+    @Transient private var vertices = FloatArray(12)
 
-    private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
+    @Transient private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer()
 
-    private val program: Int
+    @Transient private val program: Int
 
     init {
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_CODE)

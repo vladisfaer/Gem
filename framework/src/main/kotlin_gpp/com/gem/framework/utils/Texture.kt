@@ -1,4 +1,3 @@
-// Texture.kt
 package com.gem.framework.utils
 
 import android.graphics.Bitmap
@@ -9,7 +8,7 @@ import com.gem.framework.*
 
 class Texture(private val textureName: String) {
 
-    var textureId: Int = 0
+    @DontSave var textureId: Int = 0
         private set
     
     init {

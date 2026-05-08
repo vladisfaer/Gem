@@ -9,33 +9,29 @@ class GemBuildPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
 
-        project.pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
-
         val androidComponents = project.extensions
             .findByType(AndroidComponentsExtension::class.java)
             ?: return
-        
+
         project.dependencies.add(
             "implementation",
-            project.findProperty("gem.kotlinx.serialization.version")
-                ?: "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
+            project.findProperty("gem.kryo.version")
+                ?.let { "com.esotericsoftware:kryo:$it" }
+                ?: "com.esotericsoftware:kryo:5.6.2"
         )
 
-        androidComponents.onVariants {
-            variant ->
+        androidComponents.onVariants { variant ->
 
             val taskProvider = project.tasks.register(
                 "${variant.name}Gem",
                 GemBuildTask::class.java
             ) {
-
                 val inputFolders = listOf(
                     "workspace",
                     "src/main/kotlin_gpp"
                 )
 
-                inputFolders.forEach {
-                    path ->
+                inputFolders.forEach { path ->
                     val dir = project.layout.projectDirectory.dir(path)
                     if (dir.asFile.exists()) {
                         inputDirs.from(dir)
@@ -53,14 +49,9 @@ class GemBuildPlugin : Plugin<Project> {
             )
 
             project.tasks.withType(KotlinCompile::class.java).configureEach {
-
                 if (name.contains(variant.name, ignoreCase = true)) {
-
                     dependsOn(taskProvider)
-
-                    source(taskProvider.flatMap {
-                        it.outputDir
-                    })
+                    source(taskProvider.flatMap { it.outputDir })
                 }
             }
         }

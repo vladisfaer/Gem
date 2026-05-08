@@ -10,10 +10,10 @@ abstract class ColliderComponent(
     var restitution: Float = 0.0f
 ) : Component() {
 
-    lateinit var shape: Shape
-    private var lastShape: Shape? = null
-    var rigidbody: RigidbodyComponent? = null
-    var fixture: Fixture? = null
+    @Transient lateinit var shape: Shape
+    @Transient private var lastShape: Shape? = null
+    @Transient var rigidbody: RigidbodyComponent? = null
+    @Transient var fixture: Fixture? = null
 
     abstract fun initializeShape()
 

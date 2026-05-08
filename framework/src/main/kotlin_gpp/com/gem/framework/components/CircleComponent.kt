@@ -13,14 +13,14 @@ class CircleComponent(
     private val segments: Int = 100
 ) : Component() {
 
-    private val localVertices: FloatArray = FloatArray(segments * 3)
-    private val vertices: FloatArray = FloatArray(segments * 3)
+    @DontSave private val localVertices: FloatArray = FloatArray(segments * 3)
+    @DontSave private val vertices: FloatArray = FloatArray(segments * 3)
 
-    private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
+    @DontSave private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer()
 
-    private val program: Int
+    @DontSave private val program: Int
 
     init {
         generateLocalVertices()

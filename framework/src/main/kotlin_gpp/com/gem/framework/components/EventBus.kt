@@ -5,10 +5,10 @@ import kotlin.reflect.KClass
 
 class EventBus : Component() {
 
-    private val nameListeners = mutableMapOf<String, MutableList<(Any?) -> Unit>>()
-    private val typedListeners = mutableMapOf<KClass<out EventData>, MutableList<(EventData) -> Unit>>()
-    private val delayedNamed = mutableListOf<Pair<String, Any?>>()
-    private val delayedTyped = mutableListOf<EventData>()
+    @Transient private val nameListeners = mutableMapOf<String, MutableList<(Any?) -> Unit>>()
+    @Transient private val typedListeners = mutableMapOf<KClass<out EventData>, MutableList<(EventData) -> Unit>>()
+    @Transient private val delayedNamed = mutableListOf<Pair<String, Any?>>()
+    @Transient private val delayedTyped = mutableListOf<EventData>()
 
     /**
      * Заранее регистрирует именованное событие. После этого post() будет

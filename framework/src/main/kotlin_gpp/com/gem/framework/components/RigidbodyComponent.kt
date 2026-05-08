@@ -12,9 +12,9 @@ import com.gem.framework.utils.*
 class RigidbodyComponent(
     private val bodyType: BodyType = BodyType.DYNAMIC
 ) : Component() {
-    lateinit var body: Body
-    private var lastTransform: Transform2D? = null
-    lateinit var physicsWorld: PhysicsWorld
+    @Transient lateinit var body: Body
+    @Transient private var lastTransform: Transform2D? = null
+    @Transient lateinit var physicsWorld: PhysicsWorld
 
     override fun onPostInit() {
         var current: GameObject? = gameObject.parent

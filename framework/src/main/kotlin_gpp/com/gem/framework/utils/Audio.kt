@@ -5,7 +5,7 @@ import com.gem.framework.globContext
 
 class Audio(fileName: String) {
 
-    internal val mediaPlayer: MediaPlayer = MediaPlayer()
+    @DontSave internal val mediaPlayer: MediaPlayer = MediaPlayer()
 
     init {
         val assetFileDescriptor = globContext.assets.openFd(fileName)

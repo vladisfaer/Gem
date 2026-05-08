@@ -31,4 +31,13 @@ data class Polygon(var fileName: String) {
     fun getVec2Array(): Array<Vec2> {
         return vertices.map { Vec2(it.x, it.y) }.toTypedArray()
     }
+    
+    companion object {
+        val Square = Polygon(listOf(
+            Vector2(0.5f, 0.5f),
+            Vector2(0.5f, -0.5f),
+            Vector2(-0.5f, -0.5f),
+            Vector2(-0.5f, 0.5f)
+        ))
+    }
 }

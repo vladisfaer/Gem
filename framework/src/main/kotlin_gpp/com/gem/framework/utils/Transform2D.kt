@@ -8,17 +8,27 @@ class Transform2D(val gameObject: GameObject) {
     private var localRotation: Float = 0f
     private var localScale: Vector2 = Vector2.One
 
-    private var parent: WeakReference<Transform2D>? = null
-    private var hasParent: Boolean = false
+    @Transient private var parent: WeakReference<Transform2D>? = null
+    @Transient private var hasParent: Boolean = false
 
     // Кэширование globalMatrix:
     // localStamp бампается на каждое изменение локальных полей;
     // effectiveStamp = localStamp + parent.effectiveStamp, рекурсивно вверх.
     // Если стамп не изменился — отдаём кэш без перемножений.
-    private var localStamp: Long = 0L
-    private var cachedStamp: Long = -1L
-    private var cachedMatrix: Matrix3? = null
-
+    @Transient private var localStamp: Long = 0L
+    @Transient private var cachedStamp: Long = -1L
+    @Transient private var cachedMatrix: Matrix3? = null
+    
+    fun setData(transformData: TransformData2D) {
+        localPosition = transformData.localPosition
+        localRotation = transformData.localRotation
+        localScale = transformData.localScale
+    }
+    
+    fun getData(): TransformData2D {
+        return TransformData2D(localPosition, localRotation, localScale)
+    }
+    
     init {
         updateParentReference()
     }

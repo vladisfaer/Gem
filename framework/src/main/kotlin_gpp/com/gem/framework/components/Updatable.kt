@@ -10,8 +10,8 @@ import kotlin.reflect.jvm.isAccessible
 
 abstract class Updatable(open var name: String = "Updatable") {
 
-    var initialized: Boolean = false
-    open var parent: GameObject? = null
+    @DontSave var initialized: Boolean = false
+    @DontSave open var parent: GameObject? = null
 
     fun tryUpdate() {
         try {
@@ -37,6 +37,10 @@ abstract class Updatable(open var name: String = "Updatable") {
             ExceptionHandler.handle(e, this)
         }
     }
+    
+    open fun onSave() {}
+    
+    open fun onLoad() {}
 
     open fun onPostInit() {}
 

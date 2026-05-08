@@ -5,7 +5,7 @@ import com.gem.framework.*
 
 class Font(private val fontName: String) {
 
-    var typeface: Typeface? = null
+    @DontSave var typeface: Typeface? = null
         private set
 
     init {

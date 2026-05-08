@@ -9,26 +9,26 @@ import java.nio.FloatBuffer
 
 class SpriteRendererComponent(private var texture: Texture) : Component() {
 
-    private val vertices = FloatArray(12)
-    private val textureCoordinates = floatArrayOf(
+    @DontSave private val vertices = FloatArray(12)
+    @DontSave private val textureCoordinates = floatArrayOf(
         0.0f, 0.0f,
         0.0f, 1.0f,
         1.0f, 1.0f,
         1.0f, 0.0f
     )
 
-    private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
+    @DontSave private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer()
 
-    private val textureBuffer: FloatBuffer = ByteBuffer.allocateDirect(textureCoordinates.size * 4)
+    @DontSave private val textureBuffer: FloatBuffer = ByteBuffer.allocateDirect(textureCoordinates.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer().apply {
             put(textureCoordinates)
             position(0)
         }
 
-    private val program: Int
+    @DontSave private val program: Int
 
     init {
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_CODE)

@@ -4,10 +4,12 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.roundToInt
 
 val rootObject: GameObject = GameObject("root")
 var time: Float = 0f
 var deltaTime: Float = 0f
+var framesPerSecond: Int = 0
 private var lastTime: Float = 0f
 
 class GLRenderer : GLSurfaceView.Renderer {
@@ -30,6 +32,7 @@ class GLRenderer : GLSurfaceView.Renderer {
     override fun onDrawFrame(gl: GL10?) {
         time = (System.nanoTime() - startTime) / 1_000_000_000f
         deltaTime = time - lastTime
+        framesPerSecond = (1/(0.001f+deltaTime)).roundToInt()
         lastTime = time
         if (initialized && !canUpdate) {
             canUpdate = true

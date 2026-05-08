@@ -42,25 +42,25 @@ class TextComponent(
             }
         }
 
-    private var textureId: Int = 0
-    private val vertices = FloatArray(12)
-    private val textureCoordinates = floatArrayOf(
+    @DontSave private var textureId: Int = 0
+    @DontSave private val vertices = FloatArray(12)
+    @DontSave private val textureCoordinates = floatArrayOf(
         1.0f, 0.0f,
         1.0f, 1.0f,
         0.0f, 1.0f,
         0.0f, 0.0f
     )
-    private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
+    @DontSave private val vertexBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertices.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer()
-    private val textureBuffer: FloatBuffer = ByteBuffer.allocateDirect(textureCoordinates.size * 4)
+    @DontSave private val textureBuffer: FloatBuffer = ByteBuffer.allocateDirect(textureCoordinates.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer().apply {
             put(textureCoordinates)
             position(0)
         }
 
-    private val program: Int
+    @DontSave private val program: Int
 
     init {
         updateTextTexture()

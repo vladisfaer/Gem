@@ -6,7 +6,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import java.io.File
 
 abstract class GemBuildTask : DefaultTask() {
 
@@ -27,69 +26,45 @@ abstract class GemBuildTask : DefaultTask() {
 
     @TaskAction
     fun process() {
-
         val outFolder = outputDir.get().asFile
 
         outFolder.deleteRecursively()
         outFolder.mkdirs()
 
-        inputDirs.files.forEach {
-            dir ->
+        inputDirs.files.forEach { dir ->
             if (dir.exists() && dir.isDirectory) {
-
                 dir.walkTopDown()
-                .filter {
-                    it.isFile && it.extension == "kt"
-                }
-                .forEach {
-                    file ->
+                    .filter { it.isFile && it.extension == "kt" }
+                    .forEach { file ->
+                        var content = file.readText()
 
-                    var content = file.readText()
+                        val hasSavableTag = "@Savable" in content
+                        val hasDontSaveTag = "@DontSave" in content
 
-                    val hasSavable = "@Savable" in content
-                    val hasDontSave = "@DontSave" in content
+                        if (hasSavableTag) {
+                            content = content.replace("@Savable", "")
+                        }
 
-                    // Замены аннотаций
-                    if (hasSavable) {
-                        content = content.replace("@Savable", "@Serializable")
+                        if (hasDontSaveTag) {
+                            content = content.replace("@DontSave", "@Transient")
+                        }
+
+                        if (hasDontSaveTag) {
+                            val lines = content.lines().toMutableList()
+                            val importsToAdd = mutableListOf<String>()
+
+                            importsToAdd += "import kotlin.jvm.Transient"
+
+                            val packageIndex = 1 //lines.indexOfFirst { it.startsWith("package ") }
+                            val insertIndex = if (packageIndex != -1) packageIndex + 1 else 0
+
+                            lines.addAll(insertIndex, importsToAdd)
+                            content = lines.joinToString("\n")
+                        }
+
+                        val outFile = outFolder.resolve(file.name)
+                        outFile.writeText(content)
                     }
-
-                    if (hasDontSave) {
-                        content = content.replace("@DontSave", "@Transient")
-                    }
-
-                    // Добавление импортов
-                    if (hasSavable || hasDontSave) {
-
-                        val lines = content.lines().toMutableList()
-                        val importsToAdd = mutableListOf<String>()
-
-                        if (hasSavable) {
-                            importsToAdd += "import kotlinx.serialization.Serializable"
-                        }
-
-                        if (hasDontSave) {
-                            importsToAdd += "import kotlinx.serialization.Transient"
-                        }
-
-                        val packageIndex = lines.indexOfFirst {
-                            it.startsWith("package ")
-                        }
-
-                        val insertIndex = if (packageIndex != -1) {
-                            packageIndex + 1
-                        } else {
-                            0
-                        }
-
-                        lines.addAll(insertIndex, importsToAdd)
-
-                        content = lines.joinToString("\n")
-                    }
-
-                    val outFile = outFolder.resolve(file.name)
-                    outFile.writeText(content)
-                }
             }
         }
     }

@@ -6,7 +6,7 @@ import org.jbox2d.common.Vec2
 import com.gem.framework.deltaTime
 
 class PhysicsWorld(override var name: String = "PhysicsWorld") : Container() {
-    val world = World(Vec2(0f, -9.8f))
+    @Transient val world = World(Vec2(0f, -9.8f))
 
     override fun rebuildUpdateOrder() {
         if (!changedUpdateOrder) return

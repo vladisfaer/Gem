@@ -4,12 +4,14 @@ import com.gem.framework.utils.*
 import com.gem.framework.components.*
 
 open class GameObject(override var name: String = "GameObject") : Updatable() {
-    val transform = Transform2D(this)
+    @DontSave val transform = Transform2D(this)
     val updatables = mutableListOf<Updatable>()
-    protected open var updateList: List<() -> Unit> = emptyList()
-    protected open var changedUpdateOrder = true
-
-    override var parent: GameObject? = null
+    @DontSave protected open var updateList: List<() -> Unit> = emptyList()
+    @DontSave protected open var changedUpdateOrder = true
+    
+    var transformData: TransformData2D = TransformData2D()
+    
+    @DontSave override var parent: GameObject? = null
         set(value) {
             field = value
             transform.updateParentReference()
@@ -134,5 +136,22 @@ open class GameObject(override var name: String = "GameObject") : Updatable() {
 
     override fun onPostInit() {
         updatables.forEach { it.postInit() }
+    }
+    
+    override fun onLoad() {
+        transform.setData(transformData)
+        updatables.forEach {
+            it.parent = this
+        }
+        updatables.forEach {
+            it.onLoad()
+        }
+    }
+    
+    override fun onSave() {
+        transformData = transform.getData()
+        updatables.forEach {
+            it.onSave()
+        }
     }
 }
