@@ -13,7 +13,6 @@ class RigidbodyComponent(
     private val bodyType: BodyType = BodyType.DYNAMIC
 ) : Component() {
     @Transient lateinit var body: Body
-    @Transient private var lastTransform: Transform2D? = null
     @Transient lateinit var physicsWorld: PhysicsWorld
 
     override fun onPostInit() {
@@ -39,7 +38,6 @@ class RigidbodyComponent(
         if (::body.isInitialized) {
             gameObject.transform.globalPosition = Vector2(body.position.x, body.position.y)
             gameObject.transform.globalRotation = Math.toDegrees(body.angle.toDouble()).toFloat()
-            lastTransform = gameObject.transform
         }
     }
 
